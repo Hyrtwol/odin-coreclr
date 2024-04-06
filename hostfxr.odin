@@ -1,6 +1,5 @@
 package coreclr
 
-// https://github.com/dotnet/runtime/blob/main/src/native/corehost/hostfxr.h#L22
 hostfxr_delegate_type :: enum {
     hdt_com_activation,
     hdt_load_in_memory_assembly,
@@ -12,14 +11,9 @@ hostfxr_delegate_type :: enum {
     hdt_load_assembly,
     hdt_load_assembly_bytes,
 }
-/*typedef int32_t(HOSTFXR_CALLTYPE *hostfxr_main_fn)(const int argc, const char_t **argv);*/
+
 hostfxr_main_fn :: #type proc(argc: int, argv: ^cstring) -> int32_t
-/*typedef int32_t(HOSTFXR_CALLTYPE *hostfxr_main_startupinfo_fn)(
-    const int argc,
-    const char_t **argv,
-    const char_t *host_path,
-    const char_t *dotnet_root,
-    const char_t *app_path);*/
+
 hostfxr_main_startupinfo_fn :: #type proc(
     argc: int,
     argv: ^cstring,
@@ -27,14 +21,7 @@ hostfxr_main_startupinfo_fn :: #type proc(
     dotnet_root: cstring,
     app_path: cstring,
 ) -> int32_t
-/*typedef int32_t(HOSTFXR_CALLTYPE* hostfxr_main_bundle_startupinfo_fn)(
-    const int argc,
-    const char_t** argv,
-    const char_t* host_path,
-    const char_t* dotnet_root,
-    const char_t* app_path,
-    int64_t bundle_header_offset);*/
-/*typedef void(HOSTFXR_CALLTYPE *hostfxr_error_writer_fn)(const char_t *message);*/
+
 hostfxr_main_bundle_startupinfo_fn :: #type proc(
     argc: int,
     argv: ^cstring,
@@ -43,6 +30,7 @@ hostfxr_main_bundle_startupinfo_fn :: #type proc(
     app_path: cstring,
     bundle_header_offset: int64_t,
 ) -> int32_t
+
 hostfxr_error_writer_fn :: #type proc(message: cstring)
 
 //
@@ -68,20 +56,11 @@ hostfxr_error_writer_fn :: #type proc(message: cstring)
 // will be propagated to hostpolicy for the duration of the call. This means that errors from
 // both hostfxr and hostpolicy will be reporter through the same error writer.
 //
-/*typedef hostfxr_error_writer_fn(HOSTFXR_CALLTYPE *hostfxr_set_error_writer_fn)(hostfxr_error_writer_fn error_writer);*/
 hostfxr_set_error_writer_fn :: #type proc(error_writer: hostfxr_error_writer_fn) -> hostfxr_error_writer_fn
 
-/*typedef void* hostfxr_handle;*/
-hostfxr_handle :: rawptr
+hostfxr_handle :: distinct rawptr
 
-/*struct hostfxr_initialize_parameters
-{
-    size_t size;
-    const char_t *host_path;
-    const char_t *dotnet_root;
-};*/
-hostfxr_initialize_parameters :: struct
-{
+hostfxr_initialize_parameters :: struct {
     size: size_t,
 	host_path: cstring,
 	dotnet_root: cstring,
@@ -114,11 +93,6 @@ hostfxr_initialize_parameters :: struct
 //
 // This function does not load the runtime.
 //
-/*typedef int32_t(HOSTFXR_CALLTYPE *hostfxr_initialize_for_dotnet_command_line_fn)(
-    int argc,
-    const char_t **argv,
-    const struct hostfxr_initialize_parameters *parameters,
-    /*out*/ hostfxr_handle *host_context_handle);*/
 hostfxr_initialize_for_dotnet_command_line_fn :: #type proc(
 	argc: int,
     argv: ^cstring,
@@ -156,10 +130,6 @@ hostfxr_initialize_for_dotnet_command_line_fn :: #type proc(
 // initializations. In the case of Success_DifferentRuntimeProperties, it is left to the consumer to verify that
 // the difference in properties is acceptable.
 //
-/*typedef int32_t(HOSTFXR_CALLTYPE *hostfxr_initialize_for_runtime_config_fn)(
-    const char_t *runtime_config_path,
-    const struct hostfxr_initialize_parameters *parameters,
-    /*out*/ hostfxr_handle *host_context_handle);*/
 hostfxr_initialize_for_runtime_config_fn :: #type proc(
 	runtime_config_path: cstring,
 	parameters: ^hostfxr_initialize_parameters,
@@ -189,10 +159,6 @@ hostfxr_initialize_for_runtime_config_fn :: #type proc(
 // If host_context_handle is nullptr and an active host context exists, this function will get the
 // property value for the active host context.
 //
-/*typedef int32_t(HOSTFXR_CALLTYPE *hostfxr_get_runtime_property_value_fn)(
-    const hostfxr_handle host_context_handle,
-    const char_t *name,
-    /*out*/ const char_t **value);*/
 hostfxr_get_runtime_property_value_fn :: #type proc(
 	host_context_handle: hostfxr_handle,
     name: cstring,
@@ -218,10 +184,6 @@ hostfxr_get_runtime_property_value_fn :: #type proc(
 // If the property already exists in the host context, it will be overwritten. If value is nullptr, the
 // property will be removed.
 //
-/*typedef int32_t(HOSTFXR_CALLTYPE *hostfxr_set_runtime_property_value_fn)(
-    const hostfxr_handle host_context_handle,
-    const char_t *name,
-    const char_t *value);*/
 hostfxr_set_runtime_property_value_fn :: #type proc(
 	host_context_handle: hostfxr_handle,
     name: cstring,
@@ -255,11 +217,6 @@ hostfxr_set_runtime_property_value_fn :: #type proc(
 // If host_context_handle is nullptr and an active host context exists, this function will get the
 // properties for the active host context.
 //
-/*typedef int32_t(HOSTFXR_CALLTYPE *hostfxr_get_runtime_properties_fn)(
-    const hostfxr_handle host_context_handle,
-    /*inout*/ size_t * count,
-    /*out*/ const char_t **keys,
-    /*out*/ const char_t **values);*/
 hostfxr_get_runtime_properties_fn :: #type proc(
 	host_context_handle: hostfxr_handle,
     count: ^size_t,
@@ -281,7 +238,6 @@ hostfxr_get_runtime_properties_fn :: #type proc(
 //
 // This function will not return until the managed application exits.
 //
-/*typedef int32_t(HOSTFXR_CALLTYPE *hostfxr_run_app_fn)(const hostfxr_handle host_context_handle);*/
 hostfxr_run_app_fn :: #type proc(host_context_handle: hostfxr_handle) -> int32_t
 
 //
@@ -305,10 +261,6 @@ hostfxr_run_app_fn :: #type proc(host_context_handle: hostfxr_handle) -> int32_t
 //     hdt_load_assembly_and_get_function_pointer
 //     hdt_get_function_pointer
 //
-/*typedef int32_t(HOSTFXR_CALLTYPE *hostfxr_get_runtime_delegate_fn)(
-    const hostfxr_handle host_context_handle,
-    enum hostfxr_delegate_type type,
-    /*out*/ void **delegate);*/
 hostfxr_get_runtime_delegate_fn :: #type proc(
 	host_context_handle: hostfxr_handle,
 	type: hostfxr_delegate_type,
@@ -325,36 +277,19 @@ hostfxr_get_runtime_delegate_fn :: #type proc(
 // Return value:
 //     The error code result.
 //
-/*typedef int32_t(HOSTFXR_CALLTYPE *hostfxr_close_fn)(const hostfxr_handle host_context_handle);*/
 hostfxr_close_fn :: #type proc(host_context_handle: hostfxr_handle) -> int32_t
 
-/*struct hostfxr_dotnet_environment_sdk_info
-{
-    size_t size;
-    const char_t* version;
-    const char_t* path;
-};*/
 hostfxr_dotnet_environment_sdk_info :: struct {
     size: size_t,
 	version: cstring,
 	path: cstring,
 }
 
-/*typedef void(HOSTFXR_CALLTYPE* hostfxr_get_dotnet_environment_info_result_fn)(
-    const struct hostfxr_dotnet_environment_info* info,
-    void* result_context);*/
 hostfxr_get_dotnet_environment_info_result_fn :: #type proc(
 	info: ^hostfxr_dotnet_environment_info,
 	result_context: rawptr
 ) -> int32_t
 
-/*struct hostfxr_dotnet_environment_framework_info
-{
-    size_t size;
-    const char_t* name;
-    const char_t* version;
-    const char_t* path;
-};*/
 hostfxr_dotnet_environment_framework_info :: struct {
     size: size_t,
 	name: cstring,
@@ -362,19 +297,6 @@ hostfxr_dotnet_environment_framework_info :: struct {
 	path: cstring,
 }
 
-/*struct hostfxr_dotnet_environment_info
-{
-    size_t size;
-
-    const char_t* hostfxr_version;
-    const char_t* hostfxr_commit_hash;
-
-    size_t sdk_count;
-    const struct hostfxr_dotnet_environment_sdk_info* sdks;
-
-    size_t framework_count;
-    const struct hostfxr_dotnet_environment_framework_info* frameworks;
-};*/
 hostfxr_dotnet_environment_info :: struct {
     size: size_t,
 
@@ -423,11 +345,6 @@ hostfxr_dotnet_environment_info :: struct {
 //   Windows     - UTF-16 (pal::char_t is 2 byte wchar_t)
 //   Unix        - UTF-8  (pal::char_t is 1 byte char)
 //
-/*typedef int32_t(HOSTFXR_CALLTYPE* hostfxr_get_dotnet_environment_info_fn)(
-    const char_t* dotnet_root,
-    void* reserved,
-    hostfxr_get_dotnet_environment_info_result_fn result,
-    void* result_context);*/
 hostfxr_get_dotnet_environment_info_fn :: #type proc(
     dotnet_root: cstring,
     reserved: rawptr,
