@@ -1,34 +1,34 @@
 package coreclr
 
 hostfxr_delegate_type :: enum {
-    hdt_com_activation,
-    hdt_load_in_memory_assembly,
-    hdt_winrt_activation,
-    hdt_com_register,
-    hdt_com_unregister,
-    hdt_load_assembly_and_get_function_pointer,
-    hdt_get_function_pointer,
-    hdt_load_assembly,
-    hdt_load_assembly_bytes,
+	hdt_com_activation,
+	hdt_load_in_memory_assembly,
+	hdt_winrt_activation,
+	hdt_com_register,
+	hdt_com_unregister,
+	hdt_load_assembly_and_get_function_pointer,
+	hdt_get_function_pointer,
+	hdt_load_assembly,
+	hdt_load_assembly_bytes,
 }
 
 hostfxr_main_fn :: #type proc(argc: int, argv: ^cstring) -> int32_t
 
 hostfxr_main_startupinfo_fn :: #type proc(
-    argc: int,
-    argv: ^cstring,
-    host_path: cstring,
-    dotnet_root: cstring,
-    app_path: cstring,
+	argc: int,
+	argv: ^cstring,
+	host_path: cstring,
+	dotnet_root: cstring,
+	app_path: cstring,
 ) -> int32_t
 
 hostfxr_main_bundle_startupinfo_fn :: #type proc(
-    argc: int,
-    argv: ^cstring,
-    host_path: cstring,
-    dotnet_root: cstring,
-    app_path: cstring,
-    bundle_header_offset: int64_t,
+	argc: int,
+	argv: ^cstring,
+	host_path: cstring,
+	dotnet_root: cstring,
+	app_path: cstring,
+	bundle_header_offset: int64_t,
 ) -> int32_t
 
 hostfxr_error_writer_fn :: #type proc(message: cstring)
@@ -61,8 +61,8 @@ hostfxr_set_error_writer_fn :: #type proc(error_writer: hostfxr_error_writer_fn)
 hostfxr_handle :: distinct rawptr
 
 hostfxr_initialize_parameters :: struct {
-    size: size_t,
-	host_path: cstring,
+	size:        size_t,
+	host_path:   cstring,
 	dotnet_root: cstring,
 }
 
@@ -95,7 +95,7 @@ hostfxr_initialize_parameters :: struct {
 //
 hostfxr_initialize_for_dotnet_command_line_fn :: #type proc(
 	argc: int,
-    argv: ^cstring,
+	argv: ^cstring,
 	parameters: ^hostfxr_initialize_parameters,
 	host_context_handle: ^hostfxr_handle,
 ) -> int32_t
@@ -161,8 +161,8 @@ hostfxr_initialize_for_runtime_config_fn :: #type proc(
 //
 hostfxr_get_runtime_property_value_fn :: #type proc(
 	host_context_handle: hostfxr_handle,
-    name: cstring,
-    value: ^cstring,
+	name: cstring,
+	value: ^cstring,
 ) -> int32_t
 
 //
@@ -186,8 +186,8 @@ hostfxr_get_runtime_property_value_fn :: #type proc(
 //
 hostfxr_set_runtime_property_value_fn :: #type proc(
 	host_context_handle: hostfxr_handle,
-    name: cstring,
-    value: cstring,
+	name: cstring,
+	value: cstring,
 ) -> int32_t
 
 //
@@ -219,9 +219,9 @@ hostfxr_set_runtime_property_value_fn :: #type proc(
 //
 hostfxr_get_runtime_properties_fn :: #type proc(
 	host_context_handle: hostfxr_handle,
-    count: ^size_t,
-    keys: ^cstring,
-    values: ^cstring,
+	count: ^size_t,
+	keys: ^cstring,
+	values: ^cstring,
 ) -> int32_t
 
 //
@@ -280,9 +280,9 @@ hostfxr_get_runtime_delegate_fn :: #type proc(
 hostfxr_close_fn :: #type proc(host_context_handle: hostfxr_handle) -> int32_t
 
 hostfxr_dotnet_environment_sdk_info :: struct {
-    size: size_t,
+	size:    size_t,
 	version: cstring,
-	path: cstring,
+	path:    cstring,
 }
 
 hostfxr_get_dotnet_environment_info_result_fn :: #type proc(
@@ -291,23 +291,20 @@ hostfxr_get_dotnet_environment_info_result_fn :: #type proc(
 ) -> int32_t
 
 hostfxr_dotnet_environment_framework_info :: struct {
-    size: size_t,
-	name: cstring,
+	size:    size_t,
+	name:    cstring,
 	version: cstring,
-	path: cstring,
+	path:    cstring,
 }
 
 hostfxr_dotnet_environment_info :: struct {
-    size: size_t,
-
-    hostfxr_version: cstring,
-    hostfxr_commit_hash: cstring,
-
-    sdk_count: size_t,
-    sdks: ^hostfxr_dotnet_environment_sdk_info,
-
-    framework_count: size_t,
-	frameworks: ^hostfxr_dotnet_environment_framework_info,
+	size:                size_t,
+	hostfxr_version:     cstring,
+	hostfxr_commit_hash: cstring,
+	sdk_count:           size_t,
+	sdks:                ^hostfxr_dotnet_environment_sdk_info,
+	framework_count:     size_t,
+	frameworks:          ^hostfxr_dotnet_environment_framework_info,
 }
 
 //
@@ -346,8 +343,8 @@ hostfxr_dotnet_environment_info :: struct {
 //   Unix        - UTF-8  (pal::char_t is 1 byte char)
 //
 hostfxr_get_dotnet_environment_info_fn :: #type proc(
-    dotnet_root: cstring,
-    reserved: rawptr,
-    result: hostfxr_get_dotnet_environment_info_result_fn,
-    result_context: rawptr
+	dotnet_root: cstring,
+	reserved: rawptr,
+	result: hostfxr_get_dotnet_environment_info_result_fn,
+	result_context: rawptr
 ) -> int32_t
