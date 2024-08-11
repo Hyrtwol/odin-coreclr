@@ -5,10 +5,10 @@ https://github.com/dotnet/runtime/blob/main/src/coreclr
 */
 package coreclr
 
+import "base:runtime"
 import _c "core:c"
 import "core:os"
 import "core:path/filepath"
-import "core:runtime"
 import "core:strings"
 
 char_t :: _c.wchar_t
