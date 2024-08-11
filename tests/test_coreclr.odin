@@ -3,7 +3,7 @@ package test_coreclr
 import _c	"core:c"
 import		"core:fmt"
 import		"core:os"
-import		"core:runtime"
+import		"base:runtime"
 import		"core:strings"
 import		"core:testing"
 import clr	".."

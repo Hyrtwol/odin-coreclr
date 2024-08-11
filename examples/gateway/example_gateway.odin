@@ -2,7 +2,7 @@ package coreclr_example_gateway
 
 import "core:fmt"
 import "core:os"
-import "core:runtime"
+import "base:runtime"
 import clr "../.."
 
 CORECLR_DIR :: "C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.2"
