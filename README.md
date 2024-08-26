@@ -19,11 +19,10 @@ to list dotnet runtimes use:
 dotnet --list-runtimes
 ```
 
-To use the lib clone it in the shared folder in the odin root.
+One way to use the lib is to add it as a git submodule:
 
 ```bat
-cd %ODIN_ROOT%
-git clone ssh://git@gitea.ontogenesis.com:2222/odin/odin-coreclr.git shared/coreclr
+git submodule add git@github.com:Hyrtwol/odin-coreclr.git coreclr
 ```
 
 ilasm.exe is from runtime.win-x64.microsoft.netcore.ilasm.8.0.0.nupkg
