@@ -26,7 +26,7 @@ get_list_separator :: proc() -> string {
 }
 
 asm_scan :: proc(totmatches: ^[dynamic]string, path: string, pattern: string = "*.dll") {
-	pkg_path, pkg_path_ok := filepath.abs(path)
+	pkg_path, pkg_path_ok := filepath.abs(path, context.temp_allocator)
 	if !pkg_path_ok {return}
 	path_pattern := filepath.join({pkg_path, pattern}, context.temp_allocator)
 	matches, err := filepath.glob(path_pattern, context.temp_allocator)
@@ -38,7 +38,7 @@ write_tpa :: proc(tpa_path: string, tpa: string) {
 	path, ok := filepath.abs(tpa_path)
 	if !ok {return}
 	fd, err := os.open(path, os.O_CREATE | os.O_WRONLY)
-	if err != 0 {return}
+	if err != os.ERROR_NONE {return}
 	defer os.close(fd)
 
 	sep := get_list_separator()

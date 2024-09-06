@@ -287,7 +287,7 @@ hostfxr_dotnet_environment_sdk_info :: struct {
 
 hostfxr_get_dotnet_environment_info_result_fn :: #type proc(
 	info: ^hostfxr_dotnet_environment_info,
-	result_context: rawptr
+	result_context: rawptr,
 ) -> int32_t
 
 hostfxr_dotnet_environment_framework_info :: struct {
@@ -346,5 +346,5 @@ hostfxr_get_dotnet_environment_info_fn :: #type proc(
 	dotnet_root: cstring,
 	reserved: rawptr,
 	result: hostfxr_get_dotnet_environment_info_result_fn,
-	result_context: rawptr
+	result_context: rawptr,
 ) -> int32_t

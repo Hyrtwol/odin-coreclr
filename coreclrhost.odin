@@ -165,10 +165,10 @@ Build a list of trusted platform assemblies
 */
 build_tpa_list :: proc(path: string, allocator := context.allocator) -> (tpa: string, ok: bool) {
 	pkg_path : string
-	pkg_path, ok = filepath.abs(path)
+	pkg_path, ok = filepath.abs(path, context.temp_allocator)
 	if !ok {return}
-	path_pattern := filepath.clean(fmt.tprintf("%s/*.dll", pkg_path))
-	matches, err := filepath.glob(path_pattern)
+	path_pattern := filepath.clean(fmt.tprintf("%s/*.dll", pkg_path), context.temp_allocator)
+	matches, err := filepath.glob(path_pattern, context.temp_allocator)
 	ok = err == .None
 	if !ok {return}
 	LIST_SEPARATOR := []byte{filepath.LIST_SEPARATOR}
@@ -190,7 +190,7 @@ load_coreclr_library :: proc(ch: ^clr_host, coreclr_path: string) -> error {
 
 	do_callback(ch, .create, .ok)
 
-	path: string = filepath.join({coreclr_path, LIBCORECLR})
+	path: string = filepath.join({coreclr_path, LIBCORECLR}, context.temp_allocator)
 	fmt.printf("path=%s\n", path)
 	host := new(core_clr_host)
 	count, ok := dynlib.initialize_symbols(host, path, /*TODO , "coreclr_"*/)
