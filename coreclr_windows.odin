@@ -1,4 +1,4 @@
-// +build windows
+#+build windows
 package coreclr
 
 import win32 "core:sys/windows"

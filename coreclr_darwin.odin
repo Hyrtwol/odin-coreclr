@@ -1,4 +1,4 @@
-// +build darwin
+#+build darwin
 package coreclr
 
 import "core:sys/darwin"
