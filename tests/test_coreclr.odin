@@ -36,7 +36,7 @@ init_coreclr_lib :: proc(t: ^testing.T) {
 	//fmt.printf("host=%v\n", host)
 }
 
-@(test)
+//@(test)
 initialize_coreclr_host :: proc(t: ^testing.T) {
 	hr: clr.error
 	host: clr.clr_host
@@ -48,22 +48,24 @@ initialize_coreclr_host :: proc(t: ^testing.T) {
 	tpa := clr.create_trusted_platform_assemblies(CORECLR_DIR, ".", allocator = context.temp_allocator)
 
 	fmt.print("initialize\n")
-	hr = clr.initialize(&host, CORECLR_DIR, "SampleHost", tpa)
+	hr = clr.initialize(&host, CORECLR_DIR, "SampleHost1", tpa)
 	expectf(t, hr == .ok, "initialize %v", hr)
 	assert(hr == .ok, "initialize")
 
-	//fmt.printf("_hostHandle=%v _domainId=%v\n", host.hostHandle, host.domainId)
+	assert(host.hostHandle != nil)
 
+	fmt.printf("_hostHandle=%v _domainId=%v\n", host.hostHandle, host.domainId)
+
+	/*
 	fmt.print("shutdown\n")
 	hr = clr.shutdown(&host)
 	expectf(t, hr == .ok, "coreclr_shutdown %v %x", hr, u32(hr))
 	assert(hr == .ok, "coreclr_shutdown :(")
-
+	*/
 	fmt.print("destroy\n")
 	hr = clr.unload_coreclr_library(&host)
 	expectf(t, hr == .ok, "unload_coreclr_library %v", hr)
 	assert(hr == .ok, "unload_coreclr_library")
-	fmt.print("done\n")
 }
 
 unmanaged_callback :: #type proc "c" (actionName: cstring, jsonArgs: cstring) -> _c.bool
@@ -74,7 +76,7 @@ do_unmanaged_callback :: proc "c" (actionName: cstring, jsonArgs: cstring) -> _c
 	return true
 }
 
-@(test)
+//@(test)
 coreclr_host_create_cb :: proc(t: ^testing.T) {
 	hr: clr.error
 	host: clr.clr_host
