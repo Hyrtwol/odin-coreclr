@@ -16,13 +16,15 @@ Domain identifier for the CoreCLR host.
 */
 domain_id   :: distinct u32
 
-error :: enum i32 {
+error :: enum u32 {
 	ok,
 	error,
 	initialize_symbols,
 	initialize_error,
 	host_null,
 	host_handle_null,
+
+	HOST_E_CLRNOTAVAILABLE = 0x80131023,
 }
 
 /*
