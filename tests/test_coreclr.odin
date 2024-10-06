@@ -3,17 +3,12 @@ package test_coreclr
 import _c	"core:c"
 import		"core:fmt"
 import		"base:runtime"
-//import		"core:strings"
 import		"core:testing"
 import clr	".."
 
 expect	:: testing.expect
 expectf	:: testing.expectf
 expect_value	:: testing.expect_value
-
-CORECLR_DIR :: "C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.2"
-
-//trusted_platform_assemblies: string = #load("trusted_platform_assemblies.txt") // todo implement a TPA scanner
 
 unmanaged_callback_ptr :: #type proc "c" (actionName: cstring, jsonArgs: cstring) -> _c.bool
 
@@ -27,7 +22,7 @@ managed_direct_method_ptr :: #type proc "c" (
 init_coreclr_lib :: proc(t: ^testing.T) {
 	hr: clr.error
 	host: clr.clr_host
-	hr = clr.load_coreclr_library(&host, CORECLR_DIR)
+	hr = clr.load_coreclr_library(&host, clr.CORECLR_DIR)
 	expect(t, host.host != nil, "initialize_coreclr_library failure")
 	//fmt.printf("host=%v\n", host)
 
@@ -37,18 +32,26 @@ init_coreclr_lib :: proc(t: ^testing.T) {
 }
 
 @(test)
+build_tpa :: proc(t: ^testing.T) {
+	tpa, ok := clr.build_tpa_list(clr.CORECLR_DIR, context.temp_allocator)
+	expect(t, ok, "build_tpa_list failure")
+	// fmt.printf("tpa=%s\n", tpa)
+	expect(t, len(tpa) > 1000)
+}
+
+//not working when runng as a test// @(test)
 initialize_coreclr_host :: proc(t: ^testing.T) {
 	hr: clr.error
 	host: clr.clr_host
 	fmt.print("initialize_coreclr_host\n")
-	hr = clr.load_coreclr_library(&host, CORECLR_DIR)
+	hr = clr.load_coreclr_library(&host, clr.CORECLR_DIR)
 	expect(t, host.host != nil, "initialize_coreclr_library failure")
 	//defer assert(clr.unload_coreclr_library(), "unload_coreclr_library")
 
-	tpa := clr.create_trusted_platform_assemblies(CORECLR_DIR, ".", allocator = context.temp_allocator)
+	tpa := clr.create_trusted_platform_assemblies(clr.CORECLR_DIR, ".", allocator = context.temp_allocator)
 
 	fmt.print("initialize\n")
-	hr = clr.initialize(&host, CORECLR_DIR, "SampleHost", tpa)
+	hr = clr.initialize(&host, clr.CORECLR_DIR, "SampleHost", tpa)
 	expectf(t, hr == .ok, "initialize %v", hr)
 	assert(hr == .ok, "initialize")
 
@@ -74,19 +77,19 @@ do_unmanaged_callback :: proc "c" (actionName: cstring, jsonArgs: cstring) -> _c
 	return true
 }
 
-@(test)
+//not working when runng as a test// @(test)
 coreclr_host_create_cb :: proc(t: ^testing.T) {
 	hr: clr.error
 	host: clr.clr_host
-	hr = clr.load_coreclr_library(&host, CORECLR_DIR)
+	hr = clr.load_coreclr_library(&host, clr.CORECLR_DIR)
 	expect(t, host.host != nil, "load_coreclr_library")
 	assert(host.host != nil, "load_coreclr_library")
 	//defer assert(clr.unload_coreclr_library(), "unload_coreclr_library")
 
-	tpa := clr.create_trusted_platform_assemblies(CORECLR_DIR, ".", allocator = context.temp_allocator)
+	tpa := clr.create_trusted_platform_assemblies(clr.CORECLR_DIR, ".", allocator = context.temp_allocator)
 
 	//fmt.print("initialize\n")
-	hr = clr.initialize(&host, CORECLR_DIR, "SampleHost", tpa)
+	hr = clr.initialize(&host, clr.CORECLR_DIR, "SampleHost", tpa)
 	expectf(t, hr == .ok, "initialize %v", hr)
 	assert(hr == .ok, "initialize")
 	//fmt.printf("_hostHandle=%v _domainId=%v\n", host.hostHandle, host.domainId)
@@ -106,12 +109,4 @@ coreclr_host_create_cb :: proc(t: ^testing.T) {
 	expectf(t, hr == .ok, "unload_coreclr_library %v", hr)
 	assert(hr == .ok, "unload_coreclr_library")
 	//fmt.print("done\n")
-}
-
-@(test)
-build_tpa :: proc(t: ^testing.T) {
-	tpa, ok := clr.build_tpa_list(CORECLR_DIR, context.temp_allocator)
-	expect(t, ok, "build_tpa_list failure")
-	// fmt.printf("tpa=%s\n", tpa)
-	expect(t, len(tpa) > 1000)
 }

@@ -5,8 +5,6 @@ import "core:os"
 import "base:runtime"
 import clr "../.."
 
-CORECLR_DIR :: "C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.2"
-
 print_if_error :: proc(hr: clr.error, loc := #caller_location) {
 	if hr != .ok {fmt.printf("Error %v (0x%X8) @ %v\n", hr, u32(hr), loc)}
 }
@@ -51,11 +49,11 @@ execute_clr_host :: proc(tpa: string) -> clr.error {
 	}
 
 	// Prepare the coreclr lib
-	clr.load_coreclr_library(&host, CORECLR_DIR) or_return
+	clr.load_coreclr_library(&host, clr.CORECLR_DIR) or_return
 	defer clr.unload_coreclr_library(&host)
 
 	// Prepare the coreclr host
-	clr.initialize(&host, CORECLR_DIR, "SampleHost", tpa) or_return
+	clr.initialize(&host, clr.CORECLR_DIR, "SampleHost", tpa) or_return
 	defer clr.shutdown(&host)
 
 	// Prepare the delegates for calling C#
@@ -69,7 +67,7 @@ execute_clr_host :: proc(tpa: string) -> clr.error {
 
 main :: proc() {
 	fmt.println(" -=< CoreCLR Host Demo >=- ")
-	tpa := clr.create_trusted_platform_assemblies(CORECLR_DIR, ".")
+	tpa := clr.create_trusted_platform_assemblies(clr.CORECLR_DIR, ".")
 	clr.write_tpa("tpa.log", tpa)
 	hr := execute_clr_host(tpa)
 	fmt.printfln("exit %v\n", hr)
