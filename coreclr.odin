@@ -35,7 +35,7 @@ asm_scan :: proc(totmatches: ^[dynamic]string, path: string, pattern: string = "
 }
 
 write_tpa :: proc(tpa_path: string, tpa: string) {
-	path, ok := filepath.abs(tpa_path)
+	path, ok := filepath.abs(tpa_path, context.temp_allocator)
 	if !ok {return}
 	fd, err := os.open(path, os.O_CREATE | os.O_WRONLY)
 	if err != os.ERROR_NONE {return}
