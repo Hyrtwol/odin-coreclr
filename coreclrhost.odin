@@ -180,9 +180,10 @@ build_tpa_list :: proc(path: string, allocator := context.allocator) -> (tpa: st
 
 /*
 Load CoreCLR runtime library.
-windows: coreclr.dll
-linux:   libcoreclr.so
-darwin:  libcoreclr.dylib
+
+- windows: coreclr.dll
+- linux:   libcoreclr.so
+- darwin:  libcoreclr.dylib
 */
 load_coreclr_library :: proc(ch: ^clr_host, coreclr_path: string) -> error {
 
