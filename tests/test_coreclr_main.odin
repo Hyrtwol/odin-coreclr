@@ -5,7 +5,7 @@ import "core:os"
 import "core:testing"
 import "core:mem"
 
-when !ODIN_TEST {
+when ODIN_TEST {
 	_ :: fmt
 	_ :: os
 	_ :: testing
