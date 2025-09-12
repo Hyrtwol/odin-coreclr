@@ -56,11 +56,13 @@ execute_clr_host :: proc(tpa: string) -> clr.error {
 	clr.initialize(&host, clr.CORECLR_DIR, "SampleHost", tpa) or_return
 	defer clr.shutdown(&host)
 
+	{
 	// Prepare the delegates for calling C#
 	gateway: Gateway = {}
 	create_gateway_delegates(&host, &gateway) or_return
 
 	call_csharp(&gateway)
+	}
 
 	return .ok
 }
@@ -70,6 +72,7 @@ main :: proc() {
 	tpa := clr.create_trusted_platform_assemblies(clr.CORECLR_DIR, ".")
 	clr.write_tpa("tpa.log", tpa)
 	hr := execute_clr_host(tpa)
+	delete(tpa)
 	fmt.printfln("exit %v\n", hr)
 	os.exit(int(hr))
 }
