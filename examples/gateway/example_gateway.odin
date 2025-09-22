@@ -1,16 +1,20 @@
 package coreclr_example_gateway
 
-import "core:fmt"
-import "core:os"
+import "base:intrinsics"
 import "base:runtime"
+import "core:fmt"
+import os "core:os/os2"
 import clr "../.."
+import "../../../obug"
+
+coreclr_dir : string
 
 print_if_error :: proc(hr: clr.error, loc := #caller_location) {
-	if hr != .ok {fmt.printf("Error %v (0x%X8) @ %v\n", hr, u32(hr), loc)}
+	if hr != .ok {fmt.printfln("Error %v (0x%8X) @ %v", hr, u32(hr), loc)}
 }
 
 event_callback :: proc(ch: ^clr.clr_host, type: clr.event_type, hr: clr.error) {
-	fmt.printf("[%v] %v (%p,%p)\n", type, hr, ch.host, ch.hostHandle)
+	fmt.printfln("[%v] %v (%p,%p)", type, hr, ch.host, ch.hostHandle)
 }
 
 create_gateway_delegates :: proc(host: ^clr.clr_host, gateway: ^Gateway) -> (res: clr.error) {
@@ -26,21 +30,21 @@ create_gateway_delegates :: proc(host: ^clr.clr_host, gateway: ^Gateway) -> (res
 
 unmanaged_callback :: proc "c" (actionName: cstring, jsonArgs: cstring) -> bool {
 	context = runtime.default_context()
-	fmt.printf("Odin>> %s, %v\n", actionName, jsonArgs)
+	fmt.printfln("Odin>> %s, %v", actionName, jsonArgs)
 	return true
 }
 
 call_csharp :: proc(gateway: ^Gateway) {
 
 	f := gateway.Plus(13, 27)
-	fmt.printf("Plus=%v\n", f)
+	fmt.println("Plus:", f)
 
 	s := gateway.Bootstrap()
-	fmt.printf("Bootstrap=%v\n", s)
+	fmt.println("Bootstrap:", s)
 
-	fmt.print("ManagedDirectMethod\n")
+	fmt.println("ManagedDirectMethod")
 	ok := gateway.ManagedDirectMethod("funky", "json doc", unmanaged_callback)
-	fmt.printf("Result: '%v'\n", ok)
+	fmt.printfln("Result: '%v'", ok)
 }
 
 execute_clr_host :: proc(tpa: string) -> clr.error {
@@ -49,11 +53,15 @@ execute_clr_host :: proc(tpa: string) -> clr.error {
 	}
 
 	// Prepare the coreclr lib
-	clr.load_coreclr_library(&host, clr.CORECLR_DIR) or_return
+	clr.load_coreclr_library(&host, coreclr_dir) or_return
 	defer clr.unload_coreclr_library(&host)
 
+	exePath, err := os.get_executable_path(context.temp_allocator)
+	if err != nil {panic("get_executable_path")}
+	fmt.println("exePath:", exePath)
+
 	// Prepare the coreclr host
-	clr.initialize(&host, clr.CORECLR_DIR, "SampleHost", tpa) or_return
+	clr.initialize(&host, exePath, "SampleHost", tpa) or_return
 	defer clr.shutdown(&host)
 
 	{
@@ -67,12 +75,25 @@ execute_clr_host :: proc(tpa: string) -> clr.error {
 	return .ok
 }
 
-main :: proc() {
+run :: proc() -> (exit_code: int) {
 	fmt.println(" -=< CoreCLR Host Demo >=- ")
-	tpa := clr.create_trusted_platform_assemblies(clr.CORECLR_DIR, ".")
+	coreclr_dir = clr.get_coreclr_dir()
+	fmt.println("coreclr_dir:", coreclr_dir)
+	working_directory, ok := os.get_working_directory(context.temp_allocator)
+	if ok != nil {panic("get_working_directory")}
+	fmt.println("working_directory:", working_directory)
+	tpa := clr.create_trusted_platform_assemblies(coreclr_dir, working_directory, allocator = context.temp_allocator)
 	clr.write_tpa("tpa.log", tpa)
-	hr := execute_clr_host(tpa)
-	delete(tpa)
-	fmt.printfln("exit %v\n", hr)
-	os.exit(int(hr))
+	err := execute_clr_host(tpa)
+	fmt.println("Done.", err)
+	exit_code = int(err)
+	return
+}
+
+main :: proc() {
+	when intrinsics.is_package_imported("obug") {
+		os.exit(obug.tracked_run(run))
+	} else {
+		os.exit(run())
+	}
 }

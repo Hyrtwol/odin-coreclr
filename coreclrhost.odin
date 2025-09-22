@@ -193,10 +193,10 @@ load_coreclr_library :: proc(ch: ^clr_host, coreclr_path: string) -> error {
 
 	do_callback(ch, .create, .ok)
 
-	path: string = filepath.join({coreclr_path, LIBCORECLR}, context.temp_allocator)
-	fmt.printf("path=%s\n", path)
+	coreclr_dll_path: string = filepath.join({coreclr_path, LIBCORECLR}, context.temp_allocator)
+	fmt.println("coreclr_dll_path:", coreclr_dll_path)
 	host := new(core_clr_host)
-	count, ok := dynlib.initialize_symbols(host, path, /*TODO , "coreclr_"*/)
+	count, ok := dynlib.initialize_symbols(host, coreclr_dll_path, /*TODO , "coreclr_"*/)
 	if !ok {return do_callback(ch, .load_library, .initialize_symbols)}
 
 	assert(count == 5)
@@ -242,16 +242,21 @@ initialize :: proc(ch: ^clr_host, exePath: string, appDomainFriendlyName: string
 	if ch.host == nil {return do_callback(ch, .initialize, .host_null)}
 	if ch.host.__handle == nil {return do_callback(ch, .initialize, .host_handle_null)}
 
+	c_exe_path := strings.clone_to_cstring(exePath, context.temp_allocator)
+	c_appDomainFriendlyName := strings.clone_to_cstring(appDomainFriendlyName, context.temp_allocator)
+	c_tpa := strings.clone_to_cstring(tpa, context.temp_allocator)
+
 	propertyCount :: 1
 	propertyKeys: [propertyCount]cstring = {"TRUSTED_PLATFORM_ASSEMBLIES"}
-	propertyValues: [propertyCount]cstring = {cstring(raw_data(tpa))}
+	//propertyValues: [propertyCount]cstring = {cstring(raw_data(tpa))}
+	propertyValues: [propertyCount]cstring = {c_tpa}
 
 	hr := ch.host.coreclr_initialize(
-		cstring(raw_data(exePath)), // App base path
-		cstring(raw_data(appDomainFriendlyName)), // AppDomain friendly name
+		c_exe_path, //cstring(raw_data(exePath)), // App base path
+		c_appDomainFriendlyName, // cstring(raw_data(appDomainFriendlyName)), // AppDomain friendly name
 		propertyCount, // Property count
-		(^cstring)(&propertyKeys[0]), // Property names
-		(^cstring)(&propertyValues[0]), // Property values
+		&propertyKeys[0], // Property names
+		&propertyValues[0], // Property values
 		&ch.hostHandle, // Host handle
 		&ch.domainId, // AppDomain ID
 	)
@@ -279,16 +284,21 @@ shutdown :: proc(ch: ^clr_host) -> error {
 Create a native callable function pointer for a managed method.
 */
 create_delegate :: proc(
-	clrhost: ^clr_host,
+	ch: ^clr_host,
 	entryPointAssemblyName: cstring,
 	entryPointTypeName: cstring,
 	entryPointMethodName: cstring,
 	delegate: ^$T,
 ) -> error where intrinsics.type_is_proc(T) {
+	assert(ch != nil)
+	assert(ch.host != nil)
+	assert(ch.host.__handle != nil)
+	assert(ch.hostHandle != nil)
+	assert(delegate != nil)
 	delegate_ptr: rawptr
-	hr := clrhost.host.coreclr_create_delegate(
-		clrhost.hostHandle,
-		clrhost.domainId,
+	hr := ch.host.coreclr_create_delegate(
+		ch.hostHandle,
+		ch.domainId,
 		entryPointAssemblyName,
 		entryPointTypeName,
 		entryPointMethodName,
@@ -305,15 +315,19 @@ create_delegate :: proc(
 Execute a managed assembly with given arguments
 */
 coreclr_execute_assembly :: proc(
-	clrhost: ^clr_host,
+	ch: ^clr_host,
 	argc: i32,
 	argv: ^cstring,
 	managedAssemblyPath: cstring,
 	exit_code: ^i32,
 ) -> error {
-	return clrhost.host.coreclr_execute_assembly(
-		clrhost.hostHandle,
-		clrhost.domainId,
+	assert(ch != nil)
+	assert(ch.host != nil)
+	assert(ch.host.__handle != nil)
+	assert(ch.hostHandle != nil)
+	return ch.host.coreclr_execute_assembly(
+		ch.hostHandle,
+		ch.domainId,
 		argc,
 		argv,
 		managedAssemblyPath,
