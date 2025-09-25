@@ -1,3 +1,4 @@
 @echo off
 dotnet build .
-odin run . -vet
+odin build . -vet
+gateway.exe
