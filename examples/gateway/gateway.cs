@@ -3,9 +3,22 @@ using System.Runtime.InteropServices;
 
 public delegate bool UnmanagedCallbackDelegate(string funcName, string jsonArgs);
 
+public struct SizeOf
+{
+    public int Int, Double, Float, Pointer;
+}
+
 public static unsafe class Gateway
 {
-    public static string Bootstrap() => typeof(Gateway).Assembly.Location;
+    public static string AssemblyLocation() => typeof(Gateway).Assembly.Location;
+
+    public static void SizeOfStuff(SizeOf* sof)
+    {
+        sof->Int = sizeof(int);
+        sof->Double = sizeof(double);
+        sof->Float = sizeof(float);
+        sof->Pointer = sizeof(nint);
+    }
 
     public static double Plus(double x, double y) => x + y;
 
@@ -19,13 +32,7 @@ public static unsafe class Gateway
         return sum;
     }
 
-    public static double Sum2(double* x, int n)
-    {
-        var span = new Span<double>(x, n);
-        return span.ToArray().Sum();
-    }
-
-	[return: MarshalAs(UnmanagedType.LPStr)]
+    [return: MarshalAs(UnmanagedType.LPStr)]
 	public static string ManagedDirectMethod(
 		[MarshalAs(UnmanagedType.LPStr)] string funcName,
 		[MarshalAs(UnmanagedType.LPStr)] string jsonArgs,

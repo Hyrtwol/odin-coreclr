@@ -9,9 +9,9 @@ public delegate bool UnmanagedCallbackDelegate(string funcName, string jsonArgs)
 
 public static unsafe class Gateway
 {
-    public static string Bootstrap()
+    public static string AssemblyLocation()
     {
-        return "Bootstrap!";
+        return "AssemblyLocation!";
     }
 
     public static double Plus(double x, double y)
