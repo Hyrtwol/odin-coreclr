@@ -5,6 +5,7 @@ import		"core:dynlib"
 import		"core:fmt"
 import		"core:path/filepath"
 import		"core:strings"
+import      "core:os"
 
 /*
 Handle for the CoreCLR host.
@@ -166,15 +167,15 @@ do_callback :: #force_inline proc(ch: ^clr_host, type: event_type, hr: error) ->
 Build a list of trusted platform assemblies
 */
 build_tpa_list :: proc(path: string, allocator := context.allocator) -> (tpa: string, ok: bool) {
-	pkg_path : string
-	pkg_path, ok = filepath.abs(path, context.temp_allocator)
-	if !ok {return}
-	path_pattern := filepath.clean(fmt.tprintf("%s/*.dll", pkg_path), context.temp_allocator)
-	matches, err := filepath.glob(path_pattern, context.temp_allocator)
-	ok = err == .None
-	if !ok {return}
+	//pkg_path : string
+	pkg_path, erra := filepath.abs(path, context.temp_allocator)
+	if erra != os.ERROR_NONE {return}
+	path_pattern, errc := filepath.clean(fmt.tprintf("%s/*.dll", pkg_path), context.temp_allocator)
+	if errc != .None {return}
+	matches, errg := filepath.glob(path_pattern, context.temp_allocator)
+	if errg != os.ERROR_NONE {return}
 	LIST_SEPARATOR := []byte{filepath.LIST_SEPARATOR}
-	tpa = strings.join(matches, string(LIST_SEPARATOR), allocator)
+	tpa, _ = strings.join(matches, string(LIST_SEPARATOR), allocator)
 	return
 }
 
@@ -193,7 +194,7 @@ load_coreclr_library :: proc(ch: ^clr_host, coreclr_path: string) -> error {
 
 	do_callback(ch, .create, .ok)
 
-	coreclr_dll_path: string = filepath.join({coreclr_path, LIBCORECLR}, context.temp_allocator)
+	coreclr_dll_path, _ := filepath.join({coreclr_path, LIBCORECLR}, context.temp_allocator)
 	fmt.println("coreclr_dll_path:", coreclr_dll_path)
 	host := new(core_clr_host)
 	count, ok := dynlib.initialize_symbols(host, coreclr_dll_path, /*TODO , "coreclr_"*/)
@@ -295,7 +296,7 @@ create_delegate :: proc(
 	assert(ch.host.__handle != nil)
 	assert(ch.hostHandle != nil)
 	assert(delegate != nil)
-	delegate_ptr: rawptr
+	delegate_ptr: rawptr = nil
 	hr := ch.host.coreclr_create_delegate(
 		ch.hostHandle,
 		ch.domainId,

@@ -3,7 +3,7 @@ package coreclr_example_gateway
 import "base:intrinsics"
 import "base:runtime"
 import "core:fmt"
-import os "core:os/os2"
+import "core:os"
 import clr "../.."
 import "../../obug"
 
