@@ -73,7 +73,6 @@ execute_clr_host :: proc(tpa: string) -> clr.error {
 		// Prepare the delegates for calling C#
 		gateway: Gateway = {}
 		create_gateway_delegates(&host, &gateway) or_return
-
 		call_csharp(&gateway)
 	}
 
