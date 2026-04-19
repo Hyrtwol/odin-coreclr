@@ -13,7 +13,7 @@ print_if_error :: proc(hr: clr.error, loc := #caller_location) {
 	if hr != .ok {fmt.printfln("Error %v (0x%8X) @ %v", hr, u32(hr), loc)}
 }
 
-event_callback :: proc(ch: ^clr.clr_host, type: clr.event_type, hr: clr.error) {
+print_event_callback :: proc(ch: ^clr.clr_host, type: clr.event_type, hr: clr.error) {
 	fmt.printfln("[%v] %v (%p,%p)", type, hr, ch.host, ch.hostHandle)
 }
 
@@ -54,7 +54,7 @@ call_csharp :: proc(gateway: ^Gateway) {
 
 execute_clr_host :: proc(tpa: string) -> clr.error {
 	host: clr.clr_host = {
-		event_cb = event_callback,
+		event_cb = print_event_callback,
 	}
 
 	// Prepare the coreclr lib

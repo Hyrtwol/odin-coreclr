@@ -2,4 +2,4 @@
 dotnet build .
 @echo Executing: odin run . -vet
 odin run . -vet
-@echo Done.
+@echo Done. %ERRORLEVEL%
