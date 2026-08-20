@@ -5,7 +5,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-public delegate bool UnmanagedCallbackDelegate(string funcName, string jsonArgs);
+public delegate bool UnmanagedCallbackDelegate(string actionName, string jsonArgs);
 
 public static unsafe class Gateway
 {
@@ -37,22 +37,22 @@ public static unsafe class Gateway
 
 	[return: MarshalAs(UnmanagedType.LPStr)]
 	public static string ManagedDirectMethod(
-		[MarshalAs(UnmanagedType.LPStr)] string funcName,
+		[MarshalAs(UnmanagedType.LPStr)] string actionName,
 		[MarshalAs(UnmanagedType.LPStr)] string jsonArgs,
 		UnmanagedCallbackDelegate unmanagedCallback)
 	{
-		Console.WriteLine($"C#>> {funcName}, {jsonArgs}");
+		Console.WriteLine($"C#>> {actionName}, {jsonArgs}");
 
 		string strRet = null;
 
 		try
 		{
-			var res = unmanagedCallback?.Invoke(funcName, jsonArgs);
+			var res = unmanagedCallback?.Invoke(actionName, jsonArgs);
 			strRet = $"Invoke was \"{res}\"";
 		}
 		catch (Exception e)
 		{
-			strRet = $"ERROR in \"{funcName}\" invoke:{Environment.NewLine} {e}";
+			strRet = $"ERROR in \"{actionName}\" invoke:{Environment.NewLine} {e}";
 			Console.WriteLine(strRet);
 		}
 

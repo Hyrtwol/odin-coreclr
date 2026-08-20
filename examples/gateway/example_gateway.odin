@@ -83,14 +83,15 @@ run :: proc() -> (exit_code: int) {
 	fmt.println(" -=< CoreCLR Host Demo >=- ")
 	coreclr_dir = clr.get_coreclr_dir()
 	fmt.println("coreclr_dir:", coreclr_dir)
-	working_directory, ok := os.get_working_directory(context.temp_allocator)
-	if ok != nil {panic("get_working_directory")}
+	working_directory, err := os.get_working_directory(context.temp_allocator)
+	if err != nil {fmt.panicf("get_working_directory: %v", err)}
 	fmt.println("working_directory:", working_directory)
 	tpa := clr.create_trusted_platform_assemblies(coreclr_dir, working_directory, allocator = context.temp_allocator)
-	clr.write_tpa("tpa.log", tpa)
-	err := execute_clr_host(tpa)
-	fmt.println("Done.", err)
-	exit_code = int(err)
+	err = clr.write_tpa("tpa.log", tpa)
+	if err != nil {fmt.panicf("write_tpa: %v", err)}
+	result := execute_clr_host(tpa)
+	fmt.println("Done.", result)
+	exit_code = int(result)
 	return
 }
 

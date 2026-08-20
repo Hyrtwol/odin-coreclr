@@ -3,7 +3,6 @@ package coreclr
 import		"base:intrinsics"
 import		"core:dynlib"
 import		"core:fmt"
-import		"core:path/filepath"
 import		"core:strings"
 import      "core:os"
 
@@ -168,13 +167,13 @@ Build a list of trusted platform assemblies
 */
 build_tpa_list :: proc(path: string, allocator := context.allocator) -> (tpa: string, ok: bool) {
 	//pkg_path : string
-	pkg_path, erra := filepath.abs(path, context.temp_allocator)
+	pkg_path, erra := os.get_absolute_path(path, context.temp_allocator)
 	if erra != os.ERROR_NONE {return}
-	path_pattern, errc := filepath.clean(fmt.tprintf("%s/*.dll", pkg_path), context.temp_allocator)
+	path_pattern, errc := os.clean_path(fmt.tprintf("%s/*.dll", pkg_path), context.temp_allocator)
 	if errc != .None {return}
-	matches, errg := filepath.glob(path_pattern, context.temp_allocator)
+	matches, errg := os.glob(path_pattern, context.temp_allocator)
 	if errg != os.ERROR_NONE {return}
-	LIST_SEPARATOR := []byte{filepath.LIST_SEPARATOR}
+	LIST_SEPARATOR := []byte{os.Path_List_Separator}
 	tpa, _ = strings.join(matches, string(LIST_SEPARATOR), allocator)
 	return
 }
@@ -194,7 +193,7 @@ load_coreclr_library :: proc(ch: ^clr_host, coreclr_path: string) -> error {
 
 	do_callback(ch, .create, .ok)
 
-	coreclr_dll_path, _ := filepath.join({coreclr_path, LIBCORECLR}, context.temp_allocator)
+	coreclr_dll_path, _ := os.join_path({coreclr_path, LIBCORECLR}, context.temp_allocator)
 	fmt.println("coreclr_dll_path:", coreclr_dll_path)
 	host := new(core_clr_host)
 	count, ok := dynlib.initialize_symbols(host, coreclr_dll_path, /*TODO , "coreclr_"*/)

@@ -35,21 +35,23 @@ asm_scan :: proc(totmatches: ^[dynamic]string, path: string, pattern: string = "
 	append_elems(totmatches, ..matches)
 }
 
-write_tpa :: proc(tpa_path: string, tpa: string) {
+write_tpa :: proc(tpa_path: string, tpa: string) -> os.Error {
 	path, erra := os.get_absolute_path(tpa_path, context.temp_allocator)
-	if erra != os.ERROR_NONE {return}
+	if erra != os.ERROR_NONE {return erra}
 	fd, err := os.open(path, os.O_CREATE | os.O_WRONLY)
-	if err != os.ERROR_NONE {return}
+	if err != os.ERROR_NONE {return err}
 	defer os.close(fd)
 
 	sep := get_list_separator()
 	assemblies, err2 := strings.split(tpa, sep, context.temp_allocator)
-	if err2 == .None {
-		for assembly in assemblies {
-			os.write_string(fd, assembly)
-			os.write_string(fd, "\n")
-		}
+	if err2 != os.ERROR_NONE {return err2}
+	//if err2 == .None {
+	for assembly in assemblies {
+		os.write_string(fd, assembly)
+		os.write_string(fd, "\n")
 	}
+	//}
+	return os.ERROR_NONE
 }
 
 create_trusted_platform_assemblies :: proc(paths: ..string, allocator := context.allocator, loc := #caller_location) -> string {
