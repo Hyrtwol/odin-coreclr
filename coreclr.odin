@@ -5,6 +5,7 @@ https://github.com/dotnet/runtime/blob/main/src/coreclr
 */
 package coreclr
 
+import "base:runtime"
 import _c "core:c"
 import "core:os"
 import "core:strings"
@@ -19,49 +20,40 @@ int64_t :: _c.int64_t
 Odin utils
 */
 
-get_list_separator :: proc() -> string {
+get_list_separator :: proc() -> (separator: string, err: runtime.Allocator_Error) {
 	return utf8.runes_to_string({os.Path_List_Separator}, context.temp_allocator)
 }
 
-asm_scan :: proc(totmatches: ^[dynamic]string, path: string, pattern: string = "*.dll") {
-	pkg_path, erra := os.get_absolute_path(path, context.temp_allocator)
-	if erra != os.General_Error.None {return}
-
-	path_pattern, errj := os.join_path({pkg_path, pattern}, context.temp_allocator)
-	if errj != .None {return}
-
-	matches, errg := os.glob(path_pattern, context.temp_allocator)
-	if errg != os.General_Error.None {return}
-	append_elems(totmatches, ..matches)
+asm_scan :: proc(assemblies: ^[dynamic]string, path: string, pattern: string = "*.dll") -> (err: Error) {
+	pkg_path := os.get_absolute_path(path, context.temp_allocator) or_return
+	path_pattern := os.join_path({pkg_path, pattern}, context.temp_allocator) or_return
+	matches := os.glob(path_pattern, context.temp_allocator) or_return
+	append_elems(assemblies, ..matches) or_return
+	return
 }
 
-write_tpa :: proc(tpa_path: string, tpa: string) -> os.Error {
-	path, erra := os.get_absolute_path(tpa_path, context.temp_allocator)
-	if erra != os.ERROR_NONE {return erra}
-	fd, err := os.open(path, os.O_CREATE | os.O_WRONLY)
-	if err != os.ERROR_NONE {return err}
+write_tpa :: proc(tpa_path: string, tpa: string) -> (err: Error) {
+	path := os.get_absolute_path(tpa_path, context.temp_allocator) or_return
+	fd := os.open(path, os.O_CREATE | os.O_WRONLY) or_return
 	defer os.close(fd)
-
-	sep := get_list_separator()
-	assemblies, err2 := strings.split(tpa, sep, context.temp_allocator)
-	if err2 != os.ERROR_NONE {return err2}
-	//if err2 == .None {
+	sep := get_list_separator() or_return
+	assemblies := strings.split(tpa, sep, context.temp_allocator) or_return
 	for assembly in assemblies {
-		os.write_string(fd, assembly)
-		os.write_string(fd, "\n")
+		os.write_string(fd, assembly) or_return
+		os.write_string(fd, "\n") or_return
 	}
-	//}
-	return os.ERROR_NONE
+	return
 }
 
-create_trusted_platform_assemblies :: proc(paths: ..string, allocator := context.allocator, loc := #caller_location) -> string {
-	assemblies := make([dynamic]string, 0, 200, context.temp_allocator)
+create_trusted_platform_assemblies :: proc(paths: ..string, allocator := context.allocator, loc := #caller_location) -> (tpa: string, err: Error) {
+	assemblies := make([dynamic]string, 0, 200, context.temp_allocator) or_return
 	for path in paths {
-		asm_scan(&assemblies, path)
+		asm_scan(&assemblies, path) or_return
 	}
 	return join_list(..assemblies[:], allocator = allocator, loc = loc)
 }
 
-join_list :: proc(assemblies: ..string, allocator := context.allocator, loc := #caller_location) -> string {
-	return strings.join(assemblies[:], get_list_separator(), allocator, loc)
+join_list :: proc(assemblies: ..string, allocator := context.allocator, loc := #caller_location) -> (res: string, err: runtime.Allocator_Error) {
+	list_separator := get_list_separator() or_return
+	return strings.join(assemblies[:], list_separator, allocator, loc)
 }

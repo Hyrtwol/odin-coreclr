@@ -1,11 +1,11 @@
 package coreclr_example_gateway
 
+import clr "../.."
+import "../../obug"
 import "base:intrinsics"
 import "base:runtime"
 import "core:fmt"
 import "core:os"
-import clr "../.."
-import "../../obug"
 
 coreclr_dir: string
 
@@ -52,7 +52,7 @@ call_csharp :: proc(gateway: ^Gateway) {
 	fmt.printfln("Result: '%v'", ok)
 }
 
-execute_clr_host :: proc(tpa: string) -> clr.error {
+execute_clr_host :: proc(tpa: string) -> clr.Error {
 	host: clr.clr_host = {
 		event_cb = print_event_callback,
 	}
@@ -61,8 +61,7 @@ execute_clr_host :: proc(tpa: string) -> clr.error {
 	clr.load_coreclr_library(&host, coreclr_dir) or_return
 	defer clr.unload_coreclr_library(&host)
 
-	exePath, err := os.get_executable_path(context.temp_allocator)
-	if err != nil {panic("get_executable_path")}
+	exePath := os.get_executable_path(context.temp_allocator) or_return
 	fmt.println("exePath:", exePath)
 
 	// Prepare the coreclr host
@@ -79,26 +78,29 @@ execute_clr_host :: proc(tpa: string) -> clr.error {
 	return .ok
 }
 
-run :: proc() -> (exit_code: int) {
+run_clr :: proc() -> (err: clr.Error) {
 	fmt.println(" -=< CoreCLR Host Demo >=- ")
-	coreclr_dir = clr.get_coreclr_dir()
+	coreclr_dir = clr.get_coreclr_dir() or_return
 	fmt.println("coreclr_dir:", coreclr_dir)
-	working_directory, err := os.get_working_directory(context.temp_allocator)
-	if err != nil {fmt.panicf("get_working_directory: %v", err)}
+	working_directory := os.get_working_directory(context.temp_allocator) or_return
 	fmt.println("working_directory:", working_directory)
-	tpa := clr.create_trusted_platform_assemblies(coreclr_dir, working_directory, allocator = context.temp_allocator)
-	err = clr.write_tpa("tpa.log", tpa)
-	if err != nil {fmt.panicf("write_tpa: %v", err)}
-	result := execute_clr_host(tpa)
-	fmt.println("Done.", result)
-	exit_code = int(result)
+	tpa := clr.create_trusted_platform_assemblies(coreclr_dir, working_directory, allocator = context.temp_allocator) or_return
+	clr.write_tpa("tpa.log", tpa) or_return
+	execute_clr_host(tpa) or_return
+	return
+}
+
+runx :: proc() -> (exit_code: int) {
+	err := run_clr()
+	exit_code = clr.error_to_exit_code(err)
+	fmt.println("Done.", exit_code, err)
 	return
 }
 
 main :: proc() {
 	when intrinsics.is_package_imported("obug") {
-		os.exit(obug.tracked_run(run))
+		os.exit(obug.tracked_run(runx))
 	} else {
-		os.exit(run())
+		os.exit(runx())
 	}
 }

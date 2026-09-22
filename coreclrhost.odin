@@ -1,10 +1,12 @@
 package coreclr
 
-import		"base:intrinsics"
-import		"core:dynlib"
-import		"core:fmt"
-import		"core:strings"
-import      "core:os"
+import "base:intrinsics"
+import "base:runtime"
+import "core:dynlib"
+import "core:fmt"
+import "core:io"
+import "core:os"
+import "core:strings"
 
 /*
 Handle for the CoreCLR host.
@@ -14,7 +16,7 @@ host_handle :: distinct rawptr
 /*
 Domain identifier for the CoreCLR host.
 */
-domain_id   :: distinct u32
+domain_id :: distinct u32
 
 error :: enum u32 {
 	ok,
@@ -23,9 +25,45 @@ error :: enum u32 {
 	initialize_error,
 	host_null,
 	host_handle_null,
-
 	HOST_E_CLRNOTAVAILABLE = 0x80131023,
 }
+
+Error :: union #shared_nil {
+	error,
+	//io.Error,
+	runtime.Allocator_Error,
+	os.Error,
+}
+
+error_to_exit_code :: proc(err: Error) -> (exit_code: int) {
+	switch e in err {
+	case error:
+		exit_code = int(e)
+	case runtime.Allocator_Error:
+		exit_code = int(e)
+	case os.Error:
+		switch oe in e {
+		case os.General_Error:
+			exit_code = int(oe)
+		case io.Error:
+			exit_code = int(oe)
+		case os.Platform_Error:
+			exit_code = int(oe)
+		case runtime.Allocator_Error:
+			exit_code = int(oe)
+		}
+	// case nil:
+	// 	exit_code = 0
+	}
+	return
+}
+
+#assert(size_of(Error) == 12)
+#assert(size_of(error) == 4)
+#assert(size_of(os.Error) == 8)
+#assert(size_of(io.Error) == 4)
+#assert(size_of(runtime.Allocator_Error) == 1)
+//#assert(size_of(Error) == size_of(u64))
 
 /*
 https://github.com/dotnet/runtime/blob/main/src/coreclr/hosts/inc/coreclrhost.h
@@ -156,7 +194,7 @@ clr_host :: struct {
 	event_cb:   event_callback,
 }
 
-@(private="file")
+@(private = "file")
 do_callback :: #force_inline proc(ch: ^clr_host, type: event_type, hr: error) -> error {
 	if ch.event_cb != nil {ch.event_cb(ch, type, hr)}
 	return hr
@@ -196,7 +234,11 @@ load_coreclr_library :: proc(ch: ^clr_host, coreclr_path: string) -> error {
 	coreclr_dll_path, _ := os.join_path({coreclr_path, LIBCORECLR}, context.temp_allocator)
 	fmt.println("coreclr_dll_path:", coreclr_dll_path)
 	host := new(core_clr_host)
-	count, ok := dynlib.initialize_symbols(host, coreclr_dll_path, /*TODO , "coreclr_"*/)
+	count, ok := dynlib.initialize_symbols(
+		host,
+		coreclr_dll_path,
+		/*TODO , "coreclr_"*/
+	)
 	if !ok {return do_callback(ch, .load_library, .initialize_symbols)}
 
 	assert(count == 5)
